@@ -8,6 +8,13 @@
  *          Wenzhao Ye (wenzhaoy)
  */
 
+//Global chars for serial readin used in loop
+char last = 0;
+char readIn = 0;
+
+//Global variables for pin assignments
+const int potPin = 0;
+
 void setup() {
   //Initialize Serial to 9600 baud
   Serial.begin(9600);
@@ -18,10 +25,6 @@ void setup() {
   Serial.println("Welcome to Team C's Sensor Lab.");
   printHelp();
 }
-
-//Global chars for serial readin used in loop
-char last = 0;
-char readIn = 0;
 
 /*
  * Read serial values in and send character before newline to switch
@@ -45,6 +48,9 @@ void charSwitch(char input) {
   switch (input) {
     case 'h':
       printHelp();
+      break;
+    case 'p':
+      readPot();
       break;
     default:
       Serial.print("Invalid Input. You sent '");
@@ -71,7 +77,22 @@ void printBar() {
 void printHelp() {
   Serial.println("A list of character commands is below:");
   Serial.println("  h: show initial instructions again");
+  Serial.println("  p: return the current angle of the poteniometer in degrees");
   Serial.println("To continue send a character followed by a newline.");
+  printBar();
+}
+
+void readPot() {
+  //Read the analog input on the potPin:
+  int sensorValue = analogRead(potPin);
+  //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+  float voltage = sensorValue * (5.0 / 1023.0);
+  //Convert the voltage to an angle:
+  float angle = (voltage-0.81)/.019;
+  //Print out the value you read:
+  Serial.print("The potentiometer is currently at ");
+  Serial.print(angle);
+  Serial.println(" degrees.");
   printBar();
 }
 
