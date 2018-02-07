@@ -15,7 +15,7 @@ int state = 0; // variable to store the value coming from the slot sensor
 float duration, distance;
 
 //Global variables for pin assignments
-const int potPin = 0;
+const int potPin = 5;
 const int slotPin = 11; // select the input pin for the interrupter
 const int IRPin = 0;
 const int trigPin = 9;
@@ -114,7 +114,7 @@ void readPot() {
   //Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   float voltage = sensorValue * (5.0 / 1023.0);
   //Convert the voltage to an angle:
-  float angle = (voltage-0.81)/.019;
+  float angle = (voltage-0.71)/.019;
   //Print out the value you read:
   Serial.print("The potentiometer is currently at ");
   Serial.print(angle);
@@ -128,28 +128,28 @@ void readSlot()
   state = digitalRead(slotPin);
   // check if the slot is closed. If it is, the state is HIGH:
   if (state == HIGH) {
-    Serial.print("The slot is currently closed.");
+    Serial.println("The slot sensor is currently closed.");
   } else {
-    Serial.print("The slot is currently open.");
+    Serial.println("The slot sensor is currently open.");
   }
   printBar();
 }
 
 float filterMedian(float val[]) {
-  if ((val[1] <= val[2]) && (val[2] <= val[3])) {
-    return val[2];
-  } else if ((val[2] <= val[3]) && (val[3] <= val[1])) {
-    return val[3];
-  } else {
+  if ((val[0] <= val[1]) && (val[1] <= val[2])) {
     return val[1];
+  } else if ((val[1] <= val[2]) && (val[2] <= val[0])) {
+    return val[2];
+  } else {
+    return val[0];
   }
 }
 
 float getIRDistance(){
   float values[3];
   for (int i = 0; i < 3; i++) {
-    values[i] = analogRead(IRPin)*.0049;
-    delay(10);
+    values[i] = analogRead(IRPin)*(5.0 / 1023.0);
+    delay(50);
   }
 
   float val = filterMedian(values);
@@ -168,8 +168,8 @@ void readIR() {
   for (int i = 0; i < 5; i++) {
     Serial.print("The IR sensor distance is ");
     Serial.print(getIRDistance());
-    Serial.print(" inches.");
-    delay(1000);
+    Serial.println(" inches.");
+    delay(850);
   }
   printBar();
 }
@@ -188,7 +188,7 @@ float getPingDistance() {
   distance = ((duration-10)*.0340)/2*0.393701;  //unit in inch
 
   values[i] = distance;
-  delay(100);
+  delay(50);
   }
 
   return filterMedian(values);
@@ -198,8 +198,8 @@ void readPing() {
   for (int i = 0; i < 5; i++) {
     Serial.print("The ping sensor distance is ");
     Serial.print(getPingDistance());
-    Serial.print(" inches.");
-    delay(700);
+    Serial.println(" inches.");
+    delay(850);
   }
   printBar();
 }

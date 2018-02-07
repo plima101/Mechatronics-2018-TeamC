@@ -5,7 +5,7 @@ void setup() {
 int IRPin = 0;
 
 float getIRDistance(){
-  float val = analogRead(IRPin)*.0049; 
+  float val = analogRead(IRPin)*(5.0 / 1023.0); 
   if(val > 1.15)
     return 12.48 - 3.03*val;
 
@@ -17,4 +17,5 @@ float getIRDistance(){
 }
 void loop() {
   Serial.println(getIRDistance());
+  delay(100);
 }
