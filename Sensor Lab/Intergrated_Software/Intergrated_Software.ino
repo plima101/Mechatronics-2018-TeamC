@@ -11,15 +11,27 @@
 //Global chars for serial readin used in loop
 char last = 0;
 char readIn = 0;
+int state = 0; // variable to store the value coming from the slot sensor
+float duration, distance;
 
 //Global variables for pin assignments
 const int potPin = 0;
+const int slotPin = 11; // select the input pin for the interrupter
+const int IRPin = 0;
+const int trigPin = 9;
+const int echoPin = 10;
+
 
 void setup() {
   //Initialize Serial to 9600 baud
   Serial.begin(9600);
 
-  //Preamble 
+  //Pin setup for Ping and Slot Sensor
+  pinMode(slotPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  //Display Preamble 
   Serial.println("Carngie Mellon Mechatronics Team C: Sensors Lab");
   printBar();
   Serial.println("Welcome to Team C's Sensor Lab.");
@@ -49,8 +61,17 @@ void charSwitch(char input) {
     case 'h':
       printHelp();
       break;
-    case 'p':
+    case 'a':
       readPot();
+      break;
+    case 'i':
+      readIR();
+      break;
+    case 'p':
+      readPing();
+      break;      
+    case 's':
+      readSlot();
       break;
     default:
       Serial.print("Invalid Input. You sent '");
@@ -77,7 +98,12 @@ void printBar() {
 void printHelp() {
   Serial.println("A list of character commands is below:");
   Serial.println("  h: show initial instructions again");
-  Serial.println("  p: return the current angle of the poteniometer in degrees");
+  Serial.println("  a: return the current angle of the poteniometer in degrees");
+  Serial.println("  i: return the filtered distance from the IR Distance sensor in inches");
+  Serial.println("     5 times over 5 seconds.");
+  Serial.println("  p: return the filtered distance from the ping sensor in inches");
+  Serial.println("     5 times over 5 seconds.");
+  Serial.println("  s: return the current state of the slot: open or closed");
   Serial.println("To continue send a character followed by a newline.");
   printBar();
 }
@@ -96,4 +122,85 @@ void readPot() {
   printBar();
 }
 
+void readSlot()
+{
+  // read the state of the pushbutton value:
+  state = digitalRead(slotPin);
+  // check if the slot is closed. If it is, the state is HIGH:
+  if (state == HIGH) {
+    Serial.print("The slot is currently closed.");
+  } else {
+    Serial.print("The slot is currently open.");
+  }
+  printBar();
+}
+
+float filterMedian(float val[]) {
+  if ((val[1] <= val[2]) && (val[2] <= val[3])) {
+    return val[2];
+  } else if ((val[2] <= val[3]) && (val[3] <= val[1])) {
+    return val[3];
+  } else {
+    return val[1];
+  }
+}
+
+float getIRDistance(){
+  float values[3];
+  for (int i = 0; i < 3; i++) {
+    values[i] = analogRead(IRPin)*.0049;
+    delay(10);
+  }
+
+  float val = filterMedian(values);
+  
+  if(val > 1.15)
+    return 12.48 - 3.03*val;
+
+  if(val > .55)
+    return 20.5 - 10*val;
+
+  else
+    return 26.5-25*val;
+}
+
+void readIR() {
+  for (int i = 0; i < 5; i++) {
+    Serial.print("The IR sensor distance is ");
+    Serial.print(getIRDistance());
+    Serial.print(" inches.");
+    delay(1000);
+  }
+  printBar();
+}
+
+float getPingDistance() {
+  float values[3];
+
+  for(int i = 0; i <3; i++) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = ((duration-10)*.0340)/2*0.393701;  //unit in inch
+
+  values[i] = distance;
+  delay(100);
+  }
+
+  return filterMedian(values);
+}
+
+void readPing() {
+  for (int i = 0; i < 5; i++) {
+    Serial.print("The ping sensor distance is ");
+    Serial.print(getPingDistance());
+    Serial.print(" inches.");
+    delay(700);
+  }
+  printBar();
+}
 
