@@ -15,11 +15,11 @@ int state = 0; // variable to store the value coming from the slot sensor
 float duration, distance;
 
 //Global variables for pin assignments
-const int potPin = 5;
+const int potPin = 0;
 const int slotPin = 11; // select the input pin for the interrupter
 const int IRPin = 0;
-const int trigPin = 9;
-const int echoPin = 10;
+const int trigPin = 5;
+const int echoPin = 6;
 
 
 void setup() {
@@ -100,7 +100,6 @@ void printHelp() {
   Serial.println("  h: show initial instructions again");
   Serial.println("  a: return the current angle of the poteniometer in degrees");
   Serial.println("  i: return the filtered distance from the IR Distance sensor in inches");
-  Serial.println("     5 times over 5 seconds.");
   Serial.println("  p: return the filtered distance from the ping sensor in inches");
   Serial.println("     5 times over 5 seconds.");
   Serial.println("  s: return the current state of the slot: open or closed");
@@ -128,9 +127,9 @@ void readSlot()
   state = digitalRead(slotPin);
   // check if the slot is closed. If it is, the state is HIGH:
   if (state == HIGH) {
-    Serial.println("The slot sensor is currently closed.");
-  } else {
     Serial.println("The slot sensor is currently open.");
+  } else {
+    Serial.println("The slot sensor is currently closed.");
   }
   printBar();
 }
@@ -147,30 +146,31 @@ float filterMedian(float val[]) {
 
 float getIRDistance(){
   float values[3];
+  
+  values[0] = analogRead(IRPin)*(5.0 / 1023.0);
+  delay(500);
+
   for (int i = 0; i < 3; i++) {
     values[i] = analogRead(IRPin)*(5.0 / 1023.0);
-    delay(50);
+    delay(25);
   }
 
   float val = filterMedian(values);
   
   if(val > 1.15)
-    return 12.48 - 3.03*val;
+    return 11.85 - 3.33*val;
 
-  if(val > .55)
-    return 20.5 - 10*val;
+  if(val > .67)
+    return 25.77 - 14.58*val;
 
   else
-    return 26.5-25*val;
+    return 66.25-75*val;
 }
 
 void readIR() {
-  for (int i = 0; i < 5; i++) {
-    Serial.print("The IR sensor distance is ");
-    Serial.print(getIRDistance());
-    Serial.println(" inches.");
-    delay(850);
-  }
+  Serial.print("The IR sensor distance is ");
+  Serial.print(getIRDistance());
+  Serial.println(" inches.");
   printBar();
 }
 
