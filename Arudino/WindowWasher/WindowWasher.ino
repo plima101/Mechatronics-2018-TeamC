@@ -25,6 +25,8 @@
 
 //Functions to to drive front/back servos 
 #include "cleaning_servos_driver.h"
+
+#include "states.h"
  
 /** END Header Files*/
 
@@ -49,11 +51,10 @@
 #define VehicleLength 50
 #define WindowLength 200
 
-enum State {InitState=1, ExtendArms=2, RetractArms=3, MoveForward=4, BumpExtendArms=5, 
-            BumpRetractArms=6, MoveOverBump=7, FinalExtendArms=8, FinalRetractArms=9, SystemStop=10};
-State currentState;
+
+long currentState;
 long loopTics;
-bool barrierCrossed;
+long barrierCrossed;
 /*
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
@@ -69,7 +70,6 @@ void setup() {
 
   barrierCrossed = 0;
   DEBUG_START;
-  DEBUG_PRINTLN("RESET");
   currentState = InitState;
   DEBUG_PRINTSTATE("InitState");
 }
@@ -77,8 +77,6 @@ void setup() {
 void loop() {
   long *left_pos, *right_pos;
   track_motor_pos(left_pos, right_pos);
-  Serial.println(*right_pos);
-  Serial.println(currentState);
   switch (currentState) {
     case InitState:
     loopTics = *right_pos;
@@ -119,13 +117,11 @@ void loop() {
     break;
     
     case FinalExtendArms:
-    DEBUG_PRINTLN("final extend");
     track_motor_stop();
     arm_motor_extend(1, 1);
     break;
     
     case FinalRetractArms:
-    DEBUG_PRINTLN("top loop");
     arm_motor_retract(1, 1);
     break;
     
@@ -145,7 +141,7 @@ void loop() {
     case InitState:
     if(digitalRead(START_PIN) == HIGH){
       currentState = ExtendArms;
-      DEBUG_PRINTSTATE("1ExtendArms");
+      DEBUG_PRINTSTATE("ExtendArms");
     }
     break;
     
@@ -171,7 +167,7 @@ void loop() {
     }
     else if(*right_pos - loopTics >= VehicleLength){
       currentState = ExtendArms;
-      DEBUG_PRINTSTATE("2ExtendArms");
+      DEBUG_PRINTSTATE("ExtendArms");
     }
 
     else if(barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
@@ -198,20 +194,18 @@ void loop() {
     track_motor_pos(left_pos, right_pos);
     if(*right_pos - loopTics >= VehicleLength + BumpLength){
       currentState = ExtendArms;
-      DEBUG_PRINTSTATE("3ExtendArms");
+      DEBUG_PRINTSTATE("ExtendArms");
     }
     break;
     
     case FinalExtendArms:
     if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
-      currentState = 420;
+      currentState = FinalRetractArms;
       DEBUG_PRINTSTATE("FinalRetractArms");
-      DEBUG_PRINTLN(currentState);
     }
     break;
     
     case FinalRetractArms:
-    DEBUG_PRINTLN("Retract");
     if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
       currentState = SystemStop;
       DEBUG_PRINTSTATE("SystemStop");
@@ -219,11 +213,9 @@ void loop() {
     break;
     
     case SystemStop:
-    DEBUG_PRINTLN("Hi");
     break;
     
     default:
-    //error
     break;
   }
   delay(100);
