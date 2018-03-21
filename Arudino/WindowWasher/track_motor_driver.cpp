@@ -3,11 +3,11 @@
 long rightPos, leftPos;
 
 void update_right(){
-  if(digitalRead(RIGHT_TRACK_B)==HIGH)
+  //if(digitalRead(RIGHT_TRACK_B)==HIGH)
     rightPos++;
   
-  else
-    rightPos--; 
+ // else
+    //rightPos--; 
 }
 
 void track_motor_setup(){

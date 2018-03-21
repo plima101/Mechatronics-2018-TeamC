@@ -49,8 +49,8 @@
 #define VehicleLength 50
 #define WindowLength 200
 
-enum State {InitState, ExtendArms, RetractArms, MoveForward, BumpExtendArms, 
-            BumpRetractArms, MoveOverBump, FinalExtendArms, FinalRetractArms, SystemStop};
+enum State {InitState=1, ExtendArms=2, RetractArms=3, MoveForward=4, BumpExtendArms=5, 
+            BumpRetractArms=6, MoveOverBump=7, FinalExtendArms=8, FinalRetractArms=9, SystemStop=10};
 State currentState;
 long loopTics;
 bool barrierCrossed;
@@ -69,6 +69,7 @@ void setup() {
 
   barrierCrossed = 0;
   DEBUG_START;
+  DEBUG_PRINTLN("RESET");
   currentState = InitState;
   DEBUG_PRINTSTATE("InitState");
 }
@@ -76,6 +77,8 @@ void setup() {
 void loop() {
   long *left_pos, *right_pos;
   track_motor_pos(left_pos, right_pos);
+  Serial.println(*right_pos);
+  Serial.println(currentState);
   switch (currentState) {
     case InitState:
     loopTics = *right_pos;
@@ -116,11 +119,13 @@ void loop() {
     break;
     
     case FinalExtendArms:
+    DEBUG_PRINTLN("final extend");
     track_motor_stop();
     arm_motor_extend(1, 1);
     break;
     
     case FinalRetractArms:
+    DEBUG_PRINTLN("top loop");
     arm_motor_retract(1, 1);
     break;
     
@@ -199,12 +204,14 @@ void loop() {
     
     case FinalExtendArms:
     if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
-      currentState = FinalRetractArms;
+      currentState = 420;
       DEBUG_PRINTSTATE("FinalRetractArms");
+      DEBUG_PRINTLN(currentState);
     }
     break;
     
     case FinalRetractArms:
+    DEBUG_PRINTLN("Retract");
     if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
       currentState = SystemStop;
       DEBUG_PRINTSTATE("SystemStop");
@@ -212,10 +219,12 @@ void loop() {
     break;
     
     case SystemStop:
+    DEBUG_PRINTLN("Hi");
     break;
     
     default:
     //error
     break;
   }
+  delay(100);
 }
