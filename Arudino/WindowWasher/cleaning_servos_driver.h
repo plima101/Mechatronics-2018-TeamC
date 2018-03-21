@@ -8,6 +8,6 @@ void cleaning_lower_front();
 
 void cleaning_lower_back();
 
-void cleaning_raise_back();
+void cleaning_lift_back();
 
 

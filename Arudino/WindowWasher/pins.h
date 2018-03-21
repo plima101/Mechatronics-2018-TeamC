@@ -3,13 +3,13 @@
 #define LEFT_TRACK_A 2
 #define RIGHT_TRACK_A 3
 #define LEFT_TRACK_B 4
-#define RIGT_TRACK_B 5
+#define RIGHT_TRACK_B 5
 #define LEFT_TRACK_PWM 6
 #define RIGHT_TRACK_PWM 7
 #define FRONT_BUMPER_LIMIT 8
 #define ULTRASONIC_ECHO 9
 #define ULTRASONIC_TRIG 10
-#define D_PIN11 11
+#define FRONT_CLEANING_SERVO 11
 #define D_PIN12 12
 #define D_PIN13 13
 #define D_PIN14 14
@@ -51,4 +51,4 @@
 #define D_PIN50 50
 #define D_PIN51 51
 #define D_PIN52 52
-#define D_PIN53 53
+#define START_PIN 53

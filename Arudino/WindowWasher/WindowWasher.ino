@@ -30,7 +30,7 @@
 
 /** BEGIN Debug Section */
 //Uncomment Line below for Debug Serial Printing
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
  #define DEBUG_START Serial.begin(9600)
@@ -45,76 +45,88 @@
 #endif
 /** END Debug Section */
 
-#define BumpLength 6
-#define VehicleLength 12
-#define WindowLength 72
+#define BumpLength 50
+#define VehicleLength 50
+#define WindowLength 200
 
 enum State {InitState, ExtendArms, RetractArms, MoveForward, BumpExtendArms, 
             BumpRetractArms, MoveOverBump, FinalExtendArms, FinalRetractArms, SystemStop};
 State currentState;
 long loopTics;
-long initialTics;
-
+bool barrierCrossed;
 /*
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
 void setup() {
+  pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
+  pinMode(RIGHT_ARM_RETRACTED, INPUT_PULLUP);
+  pinMode(FRONT_BUMPER_LIMIT, INPUT_PULLUP);
+
+  cleaning_servos_setup();
+  track_motor_setup();
+  arm_motor_setup();
+
+  barrierCrossed = 0;
   DEBUG_START;
   currentState = InitState;
+  DEBUG_PRINTSTATE("InitState");
 }
 
 void loop() {
+  long *left_pos, *right_pos;
+  track_motor_pos(left_pos, right_pos);
   switch (currentState) {
     case InitState:
-    //initial Tics = tics
+    loopTics = *right_pos;
     break;
     
     case ExtendArms:
-    //track motor off
-    //arm motor on
-    //loop Tics = tics
+    loopTics = *right_pos;
+    track_motor_stop();
+    arm_motor_extend(1, 1);
     break;
     
     case RetractArms:
-    //arm motor on reverse
+    arm_motor_retract(1, 1);
     break;
     
     case MoveForward:
-    //arm motor off
-    //track motor on
-    //lower servo
-    //lower tensioner
+    arm_motor_stop(1, 1);
+    track_motor_enable();
+    //track_servo_restore();
+    cleaning_lower_front();
     break;
     
     case BumpExtendArms:
-    //track motor off
-    //arm motor on
-    //loop Tics = tics
+    track_motor_stop();
+    arm_motor_extend(1,1);
+    loopTics = *right_pos;
     break;
     
     case BumpRetractArms:
-    //arm motor on reverse
+    arm_motor_retract(1,1);
     break;
     
     case MoveOverBump:
-    //raise servo
-    //raise tensioner
-    //move forward
+    cleaning_lift_front();
+    //track_servo_release();
+    track_motor_enable();
+    barrierCrossed = 1;
     break;
     
     case FinalExtendArms:
-    //track motor off
-    //arm motor on
+    track_motor_stop();
+    arm_motor_extend(1, 1);
     break;
     
     case FinalRetractArms:
-    //arm motor on reverse
+    arm_motor_retract(1, 1);
     break;
     
     case SystemStop:
-    //track motor off
-    //arm motor off
+    track_motor_stop();
+    arm_motor_stop(1, 1);
     break;
     
     default:
@@ -122,67 +134,81 @@ void loop() {
     break;
   }
   
+
+  //next state logic
   switch (currentState) {
     case InitState:
-    DEBUG_PRINTSTATE("InitState");
-    currentState = ExtendArms;
-    DEBUG_PRINTSTATE("ExtendArms");
+    if(digitalRead(START_PIN) == HIGH){
+      currentState = ExtendArms;
+      DEBUG_PRINTSTATE("1ExtendArms");
+    }
     break;
     
     case ExtendArms:
-    //If Arm outer limit
-    currentState = RetractArms;
-    DEBUG_PRINTSTATE("RetractArms");
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+      currentState = RetractArms;
+      DEBUG_PRINTSTATE("RetractArms");
+    }
     break;
     
     case RetractArms:
-    //If Arm inner limit
-    currentState = MoveForward;
-    DEBUG_PRINTSTATE("MoveForward");
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+      currentState = MoveForward;
+      DEBUG_PRINTSTATE("MoveForward");
+    }
     break;
     
     case MoveForward:
-    //If Bump
-    currentState = BumpExtendArms;
-    DEBUG_PRINTSTATE("BumpExtendArms");
+    track_motor_pos(left_pos, right_pos);
+    if(!barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
+      currentState = BumpExtendArms;
+      DEBUG_PRINTSTATE("BumpExtendArms");
+    }
+    else if(*right_pos - loopTics >= VehicleLength){
+      currentState = ExtendArms;
+      DEBUG_PRINTSTATE("2ExtendArms");
+    }
 
-    //If tics - loopTics >= Vehicle Length
-    currentState = ExtendArms;
-    DEBUG_PRINTSTATE("ExtendArms");
-
-    //If tics - loopTics >= Window Length
-    currentState = FinalExtendArms;
-    DEBUG_PRINTSTATE("FinalExtendArms");
+    else if(barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
+      currentState = FinalExtendArms;
+      DEBUG_PRINTSTATE("FinalExtendArms");
+    }
     break;
     
     case BumpExtendArms:
-    //If Arm outer limit
-    currentState = BumpRetractArms;
-    DEBUG_PRINTSTATE("BumpRetractArms");
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+      currentState = BumpRetractArms;
+      DEBUG_PRINTSTATE("BumpRetractArms");
+    }
     break;
     
     case BumpRetractArms:
-    //If Arm inner limit
-    currentState = MoveOverBump;
-    DEBUG_PRINTSTATE("MoveOverBump");
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+      currentState = MoveOverBump;
+      DEBUG_PRINTSTATE("MoveOverBump");
+    }
     break;
     
     case MoveOverBump:
-    //If tics - loopTics >= Vehicle Length + Bump Length
-    currentState = ExtendArms;
-    DEBUG_PRINTSTATE("ExtendArms");
+    track_motor_pos(left_pos, right_pos);
+    if(*right_pos - loopTics >= VehicleLength + BumpLength){
+      currentState = ExtendArms;
+      DEBUG_PRINTSTATE("3ExtendArms");
+    }
     break;
     
     case FinalExtendArms:
-    //If Arm outer limit
-    currentState = FinalRetractArms;
-    DEBUG_PRINTSTATE("FinalRetractArms");
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+      currentState = FinalRetractArms;
+      DEBUG_PRINTSTATE("FinalRetractArms");
+    }
     break;
     
     case FinalRetractArms:
-    //If Arm inner limit
-    currentState = SystemStop;
-    DEBUG_PRINTSTATE("SystemStop");
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+      currentState = SystemStop;
+      DEBUG_PRINTSTATE("SystemStop");
+    }
     break;
     
     case SystemStop:
