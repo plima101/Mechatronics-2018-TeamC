@@ -20,9 +20,6 @@
 //Functions to setup and read from accelermoter on chosen
 #include "accelerometer.h"
 
-//Functions to drive track servo
-#include "track_servo_driver.h"
-
 //Functions to to drive front/back servos 
 #include "cleaning_servos_driver.h"
 
@@ -75,6 +72,7 @@ void setup() {
 }
 
 void loop() {
+  int left_temp, right_temp;
   long *left_pos, *right_pos;
   track_motor_pos(left_pos, right_pos);
   switch (currentState) {
@@ -85,44 +83,64 @@ void loop() {
     case ExtendArms:
     loopTics = *right_pos;
     track_motor_stop();
-    arm_motor_extend(1, 1);
+    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
+    arm_motor_extend(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);
     break;
     
     case RetractArms:
-    arm_motor_retract(1, 1);
+    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
+    arm_motor_retract(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);
     break;
     
     case MoveForward:
     arm_motor_stop(1, 1);
-    track_motor_enable();
-    //track_servo_restore();
     cleaning_lower_front();
+    track_motor_enable();
+
+
+
     break;
     
     case BumpExtendArms:
     track_motor_stop();
-    arm_motor_extend(1,1);
+    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
+    arm_motor_extend(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);
     loopTics = *right_pos;
     break;
     
     case BumpRetractArms:
-    arm_motor_retract(1,1);
+    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
+    arm_motor_retract(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);   
     break;
     
     case MoveOverBump:
     cleaning_lift_front();
-    //track_servo_release();
+    arm_motor_stop(1,1);
     track_motor_enable();
     barrierCrossed = 1;
     break;
     
     case FinalExtendArms:
     track_motor_stop();
-    arm_motor_extend(1, 1);
+    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
+    arm_motor_extend(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);
     break;
     
     case FinalRetractArms:
-    arm_motor_retract(1, 1);
+    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
+    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
+    arm_motor_retract(!left_temp, !right_temp);
+    arm_motor_stop(left_temp, right_temp);
     break;
     
     case SystemStop:
@@ -146,14 +164,16 @@ void loop() {
     break;
     
     case ExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
+       digitalRead(LEFT_ARM_EXTENDED)== HIGH){
       currentState = RetractArms;
       DEBUG_PRINTSTATE("RetractArms");
     }
     break;
     
     case RetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
+       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
       currentState = MoveForward;
       DEBUG_PRINTSTATE("MoveForward");
     }
@@ -177,14 +197,16 @@ void loop() {
     break;
     
     case BumpExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
+       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
       currentState = BumpRetractArms;
       DEBUG_PRINTSTATE("BumpRetractArms");
     }
     break;
     
     case BumpRetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
+       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
       currentState = MoveOverBump;
       DEBUG_PRINTSTATE("MoveOverBump");
     }
@@ -199,14 +221,16 @@ void loop() {
     break;
     
     case FinalExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH){
+    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
+       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
       currentState = FinalRetractArms;
       DEBUG_PRINTSTATE("FinalRetractArms");
     }
     break;
     
     case FinalRetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH){
+    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
+       digitalRead(LEFT_ARM_RETRACTED) == HIGH){
       currentState = SystemStop;
       DEBUG_PRINTSTATE("SystemStop");
     }
@@ -218,5 +242,5 @@ void loop() {
     default:
     break;
   }
-  delay(100);
+  delay(50);
 }
