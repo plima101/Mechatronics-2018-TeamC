@@ -26,7 +26,7 @@
 #define RIGHT_ARM_IN2 25
 #define RIGHT_ARM_EXTENDED 26
 #define RIGHT_ARM_RETRACTED 27
-#define D_PIN28 28
+#define RIGHT_ARM_EN 28
 #define D_PIN29 29
 #define D_PIN30 30
 #define D_PIN31 31
@@ -38,7 +38,7 @@
 #define LEFT_ARM_IN2 37
 #define LEFT_ARM_EXTENDED 38
 #define LEFT_ARM_RETRACTED 39
-#define D_PIN40 40
+#define LEFT_ARM_EN 40
 #define D_PIN41 41
 #define D_PIN42 42
 #define D_PIN43 43
