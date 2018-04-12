@@ -80,8 +80,9 @@ long leftPoslocal, rightPoslocal;
 void loop() {
   track_motor_pos(&leftPoslocal, &rightPoslocal);
    DEBUG_PRINTLN(leftPoslocal);
+   DEBUG_PRINTLN(rightPoslocal);
   if(leftPoslocal < 5*270*16)
-  track_motor_pid(2.16, 2.16);
+  track_motor_pid(1.5, 1.5);
   else
   track_motor_stop();
   delay(50);
