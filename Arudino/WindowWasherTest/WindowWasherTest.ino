@@ -48,7 +48,7 @@
 #define VehicleLength 50
 #define WindowLength 200
 
-
+long leftTargetLocal, rightTargetLocal;
 long currentState;
 long loopTics;
 long barrierCrossed;
@@ -63,8 +63,13 @@ void setup() {
   pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
   pinMode(RIGHT_ARM_RETRACTED, INPUT_PULLUP);
   pinMode(FRONT_BUMPER_LIMIT, INPUT_PULLUP);
+  digitalWrite(LEFT_RELAY, HIGH);
+  digitalWrite(RIGHT_RELAY, HIGH);
+  pinMode(LEFT_RELAY, OUTPUT);
+  pinMode(RIGHT_RELAY, OUTPUT);
   DEBUG_START;
-
+  leftTargetLocal = CUP_LENGTH;
+  rightTargetLocal = CUP_LENGTH;
   cleaning_servos_setup();
   track_motor_setup();
   arm_motor_setup();
@@ -78,12 +83,25 @@ void setup() {
 long leftPoslocal, rightPoslocal;
 
 void loop() {
-  track_motor_pos(&leftPoslocal, &rightPoslocal);
-   DEBUG_PRINTLN(leftPoslocal);
-   DEBUG_PRINTLN(rightPoslocal);
-  if(leftPoslocal < 5*270*16)
-  track_motor_pid(1.5, 1.5);
-  else
-  track_motor_stop();
-  delay(50);
+  if(at_targets()){
+    digitalWrite(LEFT_RELAY, LOW);
+    digitalWrite(RIGHT_RELAY, LOW);
+    delay(50);
+    digitalWrite(LEFT_RELAY, HIGH);
+    digitalWrite(RIGHT_RELAY, HIGH);
+    leftTargetLocal += CUP_LENGTH;
+    rightTargetLocal += CUP_LENGTH;
+    update_targets(leftTargetLocal, rightTargetLocal);
+    reset_targets();
+    track_motor_enable();
+    
+  }
+  else{
+    track_motor_pos(&leftPoslocal, &rightPoslocal);
+    DEBUG_PRINTLN(leftPoslocal);
+    DEBUG_PRINTLN(rightPoslocal);
+    track_motor_stop(.5, .5);
+    delay(50);
+  }
+  
 }

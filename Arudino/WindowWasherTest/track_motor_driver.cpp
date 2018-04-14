@@ -1,5 +1,6 @@
 #include "track_motor_driver.h"
 #include "Arduino.h"
+long leftTarget, rightTarget, leftAtTarget, rightAtTarget;
 long rightPos, leftPos;
 double rightPWM, leftPWM;
 long prevRightPos, prevLeftPos;
@@ -28,6 +29,13 @@ void update_right(){
     rightPos--;
   else
     rightPos++; 
+
+  if(rightPos >= rightTarget){
+    if(!rightAtTarget){
+      rightAtTarget = 1;
+      track_motor_stop(0,1);
+    }
+  }
 }
 
 void update_left(){
@@ -36,7 +44,14 @@ void update_left(){
     leftPos--;
   
   else
-    leftPos++; 
+    leftPos++;
+
+  if(leftPos >= leftTarget){
+    if(!leftAtTarget){
+      leftAtTarget = 1;
+      track_motor_stop(1,0);
+    }
+  }
 }
 
 void track_motor_setup(){
@@ -47,7 +62,10 @@ void track_motor_setup(){
   leftPWM = 0;
   rightPWM = 0;
   last_time = millis();
-
+  leftAtTarget = 0;
+  leftTarget = 0;
+  rightTarget = 0;
+  rightAtTarget = 0;
   pinMode(RIGHT_TRACK_IN1, OUTPUT);
   pinMode(RIGHT_TRACK_IN2, OUTPUT);
   pinMode(RIGHT_TRACK_A, INPUT);
@@ -71,14 +89,17 @@ void track_motor_enable(){
   digitalWrite(LEFT_TRACK_IN2, HIGH);
 }
 
-void track_motor_stop(){
+void track_motor_stop(long left_stop, long right_stop){
+  if(right_stop){
   digitalWrite(RIGHT_TRACK_IN1, LOW);
   digitalWrite(RIGHT_TRACK_IN2, LOW);
-  analogWrite(RIGHT_TRACK_PWM, 255);
-
+  analogWrite(RIGHT_TRACK_PWM, 0);
+  }
+  if(left_stop){
   digitalWrite(LEFT_TRACK_IN1, LOW);
   digitalWrite(LEFT_TRACK_IN2, LOW);
-  analogWrite(LEFT_TRACK_PWM, 255);
+  analogWrite(LEFT_TRACK_PWM, 0);
+  }
 }
 
 
@@ -127,5 +148,19 @@ void track_motor_pos(long* left_pos, long* right_pos){
   *right_pos = rightPos;
 }
 
+void update_targets(long left_target, long right_target){
+  leftTarget = left_target;
+  rightTarget = right_target;
+  return;
+}
+
+long at_targets(){
+  return leftAtTarget && rightAtTarget;
+}
+
+void reset_targets(){
+  leftAtTarget = 0;
+  rightAtTarget = 0;
+}
 
 

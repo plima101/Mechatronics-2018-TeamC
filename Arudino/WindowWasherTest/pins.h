@@ -48,7 +48,8 @@
 #define D_PIN47 47
 #define LEFT_ARM_RETRACTED 48
 #define D_PIN49 49
-#define D_PIN50 50
+#define RIGHT_RELAY 50
 #define D_PIN51 51
-#define START_PIN 52
+#define LEFT_RELAY 52
 #define D_PIN53 53
+#define CUP_LENGTH 3456
