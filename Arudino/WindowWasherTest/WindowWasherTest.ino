@@ -86,7 +86,7 @@ void loop() {
   if(at_targets()){
     digitalWrite(LEFT_RELAY, LOW);
     digitalWrite(RIGHT_RELAY, LOW);
-    delay(50);
+    delay(500);
     digitalWrite(LEFT_RELAY, HIGH);
     digitalWrite(RIGHT_RELAY, HIGH);
     leftTargetLocal += CUP_LENGTH;
@@ -100,8 +100,9 @@ void loop() {
     track_motor_pos(&leftPoslocal, &rightPoslocal);
     DEBUG_PRINTLN(leftPoslocal);
     DEBUG_PRINTLN(rightPoslocal);
-    track_motor_stop(.5, .5);
+    track_motor_pid(.5, .5);
     delay(50);
-  }
+ 
+}
   
 }
