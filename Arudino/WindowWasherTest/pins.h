@@ -52,4 +52,4 @@
 #define D_PIN51 51
 #define LEFT_RELAY 52
 #define D_PIN53 53
-#define CUP_LENGTH 3456
+
