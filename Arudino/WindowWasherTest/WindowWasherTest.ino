@@ -47,6 +47,7 @@
 #define BumpLength 50
 #define VehicleLength 50
 #define WindowLength 200
+#define CUP_LENGTH 3456
 
 long leftTargetLocal, rightTargetLocal;
 long currentState;
@@ -68,10 +69,12 @@ void setup() {
   pinMode(LEFT_RELAY, OUTPUT);
   pinMode(RIGHT_RELAY, OUTPUT);
   DEBUG_START;
+  track_motor_setup();
   leftTargetLocal = CUP_LENGTH;
   rightTargetLocal = CUP_LENGTH;
+  update_targets(leftTargetLocal, rightTargetLocal);
   cleaning_servos_setup();
-  track_motor_setup();
+  cleaning_lower_front();
   arm_motor_setup();
   track_motor_enable();
 
@@ -84,6 +87,22 @@ long leftPoslocal, rightPoslocal;
 
 void loop() {
   if(at_targets()){
+    cleaning_lift_front();
+    delay(100);
+    track_motor_pos(&leftPoslocal, &rightPoslocal);
+    
+    digitalWrite(LEFT_RELAY, LOW);
+    digitalWrite(RIGHT_RELAY, LOW);
+    delay(500);
+    digitalWrite(LEFT_RELAY, HIGH);
+    digitalWrite(RIGHT_RELAY, HIGH);
+    delay(100);
+    digitalWrite(LEFT_RELAY, LOW);
+    digitalWrite(RIGHT_RELAY, LOW);
+    delay(500);
+    digitalWrite(LEFT_RELAY, HIGH);
+    digitalWrite(RIGHT_RELAY, HIGH);
+    delay(100);
     digitalWrite(LEFT_RELAY, LOW);
     digitalWrite(RIGHT_RELAY, LOW);
     delay(500);
@@ -93,6 +112,7 @@ void loop() {
     rightTargetLocal += CUP_LENGTH;
     update_targets(leftTargetLocal, rightTargetLocal);
     reset_targets();
+    cleaning_lower_front();
     track_motor_enable();
     
   }
@@ -102,7 +122,7 @@ void loop() {
     DEBUG_PRINTLN(rightPoslocal);
     track_motor_pid(.5, .5);
     delay(50);
- 
+  }
 }
   
-}
+
