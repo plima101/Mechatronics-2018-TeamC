@@ -9,9 +9,9 @@
 #define RIGHT_TRACK_PWM 8
 #define FRONT_BUMPER_LIMIT 9
 #define D_PIN10 10
-#define BACK_CLEANING_SERVO 11
-#define FRONT_CLEANING_SERVO 12
-#define D_PIN13 13
+#define D_PIN11 11
+#define D_PIN12 12
+#define FRONT_SERVO 13
 #define D_PIN14 14
 #define D_PIN15 15
 #define D_PIN16 16
@@ -48,7 +48,8 @@
 #define D_PIN47 47
 #define LEFT_ARM_RETRACTED 48
 #define D_PIN49 49
-#define D_PIN50 50
+#define RIGHT_RELAY 50
 #define D_PIN51 51
-#define START_PIN 52
+#define LEFT_RELAY 52
 #define D_PIN53 53
+

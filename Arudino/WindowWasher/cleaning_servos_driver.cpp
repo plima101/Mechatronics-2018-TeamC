@@ -2,18 +2,19 @@
 #include "Arduino.h"
 #include <Servo.h>
 
-Servo myservo;
+#define F_DOWN 30
+#define F_UP 75
 
+Servo front_servo;
 void cleaning_servos_setup(){
-  
-  myservo.attach(FRONT_CLEANING_SERVO);
-  myservo.write(180);
+  front_servo.attach(FRONT_SERVO);
+  front_servo.write(F_DOWN);
 }
 
 void cleaning_lift_front(){
-  myservo.write(180); 
+  front_servo.write(F_UP); 
 }
 
 void cleaning_lower_front(){
-  myservo.write(0);
+  front_servo.write(F_DOWN);
 }
