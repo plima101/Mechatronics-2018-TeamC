@@ -6,4 +6,7 @@ void cleaning_lift_front();
 
 void cleaning_lower_front();
 
+void lift_scrapers();
+
+void lower_scrapers();
 

@@ -57,8 +57,6 @@ long barrierCrossed;
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
-int cntpwm;
-int dirpwm;
 
 void setup() {
   pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
@@ -79,8 +77,6 @@ void setup() {
   track_motor_enable();
 
 
-  cntpwm = 1;
-  dirpwm = 1;
 }
 
 long leftPoslocal, rightPoslocal;

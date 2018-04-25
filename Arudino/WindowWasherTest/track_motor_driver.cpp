@@ -163,4 +163,9 @@ void reset_targets(){
   rightAtTarget = 0;
 }
 
+void track_clear_pos(){
+  leftPos = 0;
+  rightPos = 0;
+}
+
 

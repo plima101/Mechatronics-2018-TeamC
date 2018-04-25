@@ -1,6 +1,6 @@
 #define InitState 1
-#define ExtendArms 2
-#define RetractArms 3 
+#define RunArms 2 
+#define BumpRunArms 3 
 #define MoveForward 4 
 #define BumpExtendArms 5
 #define BumpRetractArms 6

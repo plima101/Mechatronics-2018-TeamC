@@ -5,6 +5,9 @@ void track_motor_setup();
 
 void track_motor_enable();
 
+//zeros encoder tics
+void track_clear_pos(); 
+
 void track_motor_stop(long left_stop, long right_stop);
 
 //called in a consitent timing to make motors move at target velocity
