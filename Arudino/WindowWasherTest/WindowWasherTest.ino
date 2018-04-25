@@ -90,7 +90,7 @@ void setup() {
     delay(20);
   }
   delay(500);
-  
+  track_clear_pos();
   leftTargetLocal = CUP_LENGTH;
   rightTargetLocal = CUP_LENGTH;
   update_targets(leftTargetLocal, rightTargetLocal);
