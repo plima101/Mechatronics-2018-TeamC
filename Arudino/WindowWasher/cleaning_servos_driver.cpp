@@ -4,11 +4,12 @@
 
 #define F_DOWN 30
 #define F_UP 75
+#define F_INIT 90
 
 Servo front_servo;
 void cleaning_servos_setup(){
   front_servo.attach(FRONT_SERVO);
-  front_servo.write(F_DOWN);
+  front_servo.write(F_INIT);
 }
 
 void cleaning_lift_front(){
