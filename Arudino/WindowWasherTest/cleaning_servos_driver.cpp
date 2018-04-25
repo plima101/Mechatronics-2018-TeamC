@@ -5,10 +5,10 @@
 #define F_DOWN 30
 #define F_UP 75
 #define F_INIT 90
-#define R_DOWN 95
-#define R_UP 155
-#define L_DOWN 65
-#define L_UP 5 
+#define L_DOWN 95
+#define L_UP 155
+#define R_DOWN 65
+#define R_UP 5 
 
 Servo front_servo;
 Servo left_scraper;

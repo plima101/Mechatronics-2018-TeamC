@@ -9,8 +9,8 @@
 #define RIGHT_TRACK_PWM 8
 #define FRONT_BUMPER_LIMIT 9
 #define D_PIN10 10
-#define RIGHT_SCRAPER 11
-#define LEFT_SCRAPER 12
+#define LEFT_SCRAPER 11
+#define RIGHT_SCRAPER 12
 #define FRONT_SERVO 13
 #define D_PIN14 14
 #define D_PIN15 15
