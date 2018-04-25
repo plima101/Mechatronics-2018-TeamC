@@ -93,19 +93,13 @@ void loop() {
     
     digitalWrite(LEFT_RELAY, LOW);
     digitalWrite(RIGHT_RELAY, LOW);
-    delay(500);
+    delay(1000);
     digitalWrite(LEFT_RELAY, HIGH);
     digitalWrite(RIGHT_RELAY, HIGH);
     delay(100);
     digitalWrite(LEFT_RELAY, LOW);
     digitalWrite(RIGHT_RELAY, LOW);
-    delay(500);
-    digitalWrite(LEFT_RELAY, HIGH);
-    digitalWrite(RIGHT_RELAY, HIGH);
-    delay(100);
-    digitalWrite(LEFT_RELAY, LOW);
-    digitalWrite(RIGHT_RELAY, LOW);
-    delay(500);
+    delay(1000);
     digitalWrite(LEFT_RELAY, HIGH);
     digitalWrite(RIGHT_RELAY, HIGH);
     leftTargetLocal += CUP_LENGTH;
