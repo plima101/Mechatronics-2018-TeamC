@@ -44,14 +44,20 @@
 #endif
 /** END Debug Section */
 
-#define BumpLength 50
+#define BumpLength 
 #define VehicleLength 50
 #define WindowLength 200
-
+#define FrontPadLength 50 
+#define MiddleLength 50
+#define ScraperLength 50
+#define ArmTime 2000
 
 long currentState;
 long loopTics;
-long barrierCrossed;
+long barrierCrossing;
+long barrierCrossed; 
+long barrierTics;
+
 /*
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
@@ -66,6 +72,28 @@ void setup() {
   arm_motor_setup();
 
   barrierCrossed = 0;
+  barrierCrossing = 0;
+  barrierTics = 0; 
+
+  track_motor_enable();
+  track_motor_pid(0.0, .5);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+    track_motor_pid(0.0, .5);
+  }
+  track_motor_stop(0, 1);
+  delay(500);
+  track_motor_pid(0.5, 0.0);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+    track_motor_pid(0.5, 0.0);
+  }
+  track_motor_stop(1,1);
+  delay(500);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+  }
+  delay(500); 
   DEBUG_START;
   currentState = InitState;
   DEBUG_PRINTSTATE("InitState");
@@ -80,9 +108,10 @@ void loop() {
     loopTics = *right_pos;
     break;
     
+
     case ExtendArms:
     loopTics = *right_pos;
-    track_motor_stop();
+    track_motor_stop(1,1);
     left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
     right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
     arm_motor_extend(!left_temp, !right_temp);
@@ -157,17 +186,15 @@ void loop() {
   //next state logic
   switch (currentState) {
     case InitState:
-    if(digitalRead(START_PIN) == HIGH){
-      currentState = ExtendArms;
-      DEBUG_PRINTSTATE("ExtendArms");
+    if(digitalRead(FRONT_LIMIT_SWITCH) == HIGH){
+      currentState = RunArms;
+      DEBUG_PRINTSTATE("RunArms");
     }
     break;
     
-    case ExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
-       digitalRead(LEFT_ARM_EXTENDED)== HIGH){
-      currentState = RetractArms;
-      DEBUG_PRINTSTATE("RetractArms");
+    case RunArms:
+      currentState = MoveForward;
+      DEBUG_PRINTSTATE("MoveForward");
     }
     break;
     
@@ -215,8 +242,8 @@ void loop() {
     case MoveOverBump:
     track_motor_pos(left_pos, right_pos);
     if(*right_pos - loopTics >= VehicleLength + BumpLength){
-      currentState = ExtendArms;
-      DEBUG_PRINTSTATE("ExtendArms");
+      currentState = RunArms;
+      DEBUG_PRINTSTATE("RunArms");
     }
     break;
     
