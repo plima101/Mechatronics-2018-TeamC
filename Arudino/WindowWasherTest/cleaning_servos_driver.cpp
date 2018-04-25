@@ -17,9 +17,9 @@ void cleaning_servos_setup(){
   front_servo.attach(FRONT_SERVO);
   front_servo.write(F_INIT);
   left_scraper.attach(LEFT_SCRAPER);
-  left_scraper.write(L_UP);
+  left_scraper.write(L_DOWN);
   right_scraper.attach(RIGHT_SCRAPER);
-  right_scraper.write(R_UP);
+  right_scraper.write(R_DOWN);
 }
 
 void cleaning_lift_front(){
