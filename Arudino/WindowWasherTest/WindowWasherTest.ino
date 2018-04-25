@@ -67,11 +67,34 @@ void setup() {
   pinMode(LEFT_RELAY, OUTPUT);
   pinMode(RIGHT_RELAY, OUTPUT);
   DEBUG_START;
+  cleaning_servos_setup();
   track_motor_setup();
+  update_targets(100000,100000);
+  reset_targets();
+  track_motor_enable();
+  track_motor_pid(0.0, .5);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+    track_motor_pid(0.0, .5);
+  }
+  track_motor_stop(0, 1);
+  delay(500);
+  track_motor_pid(0.5, 0.0);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+    track_motor_pid(0.5, 0.0);
+  }
+  track_motor_stop(1,1);
+  delay(500);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+  }
+  delay(500);
+  
   leftTargetLocal = CUP_LENGTH;
   rightTargetLocal = CUP_LENGTH;
   update_targets(leftTargetLocal, rightTargetLocal);
-  cleaning_servos_setup();
+  lower_scrapers();
   cleaning_lower_front();
   arm_motor_setup();
   track_motor_enable();
