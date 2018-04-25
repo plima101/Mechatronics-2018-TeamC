@@ -3,7 +3,7 @@
 #include <Servo.h>
 
 #define F_DOWN 30
-#define F_UP 100
+#define F_UP 75
 
 Servo front_servo;
 void cleaning_servos_setup(){
