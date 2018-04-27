@@ -57,6 +57,7 @@ long barrierCrossed;
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
+int cupMoved;
 
 void setup() {
   pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
@@ -98,13 +99,15 @@ void setup() {
   cleaning_lower_front();
   arm_motor_setup();
   track_motor_enable();
+  armClean();
 
-
+  cupMoved = 0;
 }
 
 long leftPoslocal, rightPoslocal;
 
 void loop() {
+  
   if(at_targets()){
     cleaning_lift_front();
     delay(100);
@@ -117,6 +120,12 @@ void loop() {
     push_scrapers();
     delay(1000);
     lower_scrapers();
+    
+    cupMoved++;
+    if (cupMoved % 4 == 0) {
+      armClean();
+    }
+    
     leftTargetLocal += CUP_LENGTH;
     rightTargetLocal += CUP_LENGTH;
     update_targets(leftTargetLocal, rightTargetLocal);
@@ -166,6 +175,18 @@ void loop() {
     delay(100);
   }
   */
+}
+
+void armClean() {
+  arm_motor_stop(true,true);
+  delay(500);
+  arm_motor_extend(true,true);
+  delay(1400);
+  arm_motor_stop(true,true);
+  delay(500);
+  arm_motor_retract(true,true);
+  delay(1400);  
+  arm_motor_stop(true,true);
 }
   
 
