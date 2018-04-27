@@ -5,21 +5,17 @@
 #define F_DOWN 30
 #define F_UP 75
 #define F_INIT 90
-#define L_DOWN 70
-#define L_UP 130
-#define R_DOWN 70
-#define R_UP 0 
+#define B_DOWN 60
+#define B_PUSH 55
+#define B_UP 105 
 
 Servo front_servo;
-Servo left_scraper;
-Servo right_scraper;
+Servo back_servo;
 void cleaning_servos_setup(){
+  back_servo.attach(RIGHT_SCRAPER);
+  back_servo.write(B_UP);
   front_servo.attach(FRONT_SERVO);
   front_servo.write(F_INIT);
-  left_scraper.attach(LEFT_SCRAPER);
-  left_scraper.write(L_UP);
-  right_scraper.attach(RIGHT_SCRAPER);
-  right_scraper.write(R_UP);
 }
 
 void cleaning_lift_front(){
@@ -31,11 +27,13 @@ void cleaning_lower_front(){
 }
 
 void lower_scrapers(){
-  left_scraper.write(L_DOWN);
-  right_scraper.write(R_DOWN);
+  back_servo.write(B_DOWN);
 }
 
 void lift_scrapers(){
-  left_scraper.write(R_UP);
-  right_scraper.write(L_UP);
+  back_servo.write(B_UP);
+}
+
+void push_scrapers(){
+  back_servo.write(B_PUSH);
 }

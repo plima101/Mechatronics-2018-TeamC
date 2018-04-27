@@ -44,29 +44,29 @@
 #endif
 /** END Debug Section */
 
-#define BumpLength 
-#define VehicleLength 50
-#define WindowLength 200
-#define FrontPadLength 50 
-#define MiddleLength 50
-#define ScraperLength 50
-#define ArmTime 2000
+#define BumpLength 1728
+#define MiddleLength 18432
+#define PadLength 4032
+#define CUP_LENGTH 3456
+
+
 
 long currentState;
 long loopTics;
 long barrierCrossing;
 long barrierCrossed; 
 long barrierTics;
+long frontCrossing, middleCrossing, backCrossing;
+long leftTargetLocal, rightTargetLocal;
 
 /*
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
 void setup() {
-  pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
-  pinMode(RIGHT_ARM_RETRACTED, INPUT_PULLUP);
   pinMode(FRONT_BUMPER_LIMIT, INPUT_PULLUP);
-
+  leftTargetLocal = 0;
+  rightTargetLocal = 0;
   cleaning_servos_setup();
   track_motor_setup();
   arm_motor_setup();
@@ -75,6 +75,8 @@ void setup() {
   barrierCrossing = 0;
   barrierTics = 0; 
 
+  update_targets(100000, 100000);
+  reset_targets();
   track_motor_enable();
   track_motor_pid(0.0, .5);
   while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
@@ -93,7 +95,9 @@ void setup() {
   while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
     delay(20);
   }
-  delay(500); 
+  delay(500);
+  track_clear_pos();
+  update_targets(CUP_LENGTH, CUP_LENGTH); 
   DEBUG_START;
   currentState = InitState;
   DEBUG_PRINTSTATE("InitState");
@@ -103,77 +107,86 @@ void loop() {
   int left_temp, right_temp;
   long *left_pos, *right_pos;
   track_motor_pos(left_pos, right_pos);
+  if(at_targets()){
+    leftTargetLocal += CUP_LENGTH;
+    rightTargetLocal += CUP_LENGTH;
+    update_targets(leftTargetLocal, rightTargetLocal);
+    reset_targets();
+    if(barrierCrossing && (frontCrossing || backCrossing)){
+        track_motor_enable();
+    }
+    cleaning_lift_front();
+    delay(100); 
+    push_scrapers();
+    delay(1000);
+    lift_scrapers();
+    delay(100);
+    push_scrapers();
+    delay(1000);
+    lower_scrapers();
+    track_motor_enable();
+  }
+    
   switch (currentState) {
     case InitState:
     loopTics = *right_pos;
     break;
     
 
-    case ExtendArms:
+    case RunArms:
+    barrierCrossing = 0;
     loopTics = *right_pos;
     track_motor_stop(1,1);
-    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
-    arm_motor_extend(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);
+    arm_run();
     break;
     
-    case RetractArms:
-    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
-    arm_motor_retract(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);
-    break;
     
     case MoveForward:
+    barrierTics = *right_pos;
     arm_motor_stop(1, 1);
-    cleaning_lower_front();
     track_motor_enable();
-
-
-
+    track_motor_pid(.5,.5);
     break;
     
-    case BumpExtendArms:
-    track_motor_stop();
-    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
-    arm_motor_extend(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);
+    case BumpRunArms:
     loopTics = *right_pos;
+    track_motor_stop(1,1);
+    arm_run();
     break;
-    
-    case BumpRetractArms:
-    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
-    arm_motor_retract(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);   
-    break;
-    
+
     case MoveOverBump:
-    cleaning_lift_front();
+    
+    if(*right_pos - barrierTics <= PadLength + BumpLength){
+        frontCrossing = 1;
+        cleaning_lift_front();
+    }
+    else{
+        frontCrossing = 0;
+        cleaning_lower_front();
+    }
+    
+    if(*right_pos - barrierTics >= PadLength + BumpLength + MiddleLength){
+        backCrossing = 1;
+        lift_scrapers();
+    }
+    else{
+        backCrossing = 0;
+        lower_scrapers();
+    }
     arm_motor_stop(1,1);
     track_motor_enable();
+    track_motor_pid(.5,.5);
     barrierCrossed = 1;
+    barrierCrossing = 1;
     break;
     
-    case FinalExtendArms:
-    track_motor_stop();
-    left_temp = digitalRead(LEFT_ARM_EXTENDED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_EXTENDED) == HIGH;
-    arm_motor_extend(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);
+    case FinalRunArms:
+    track_motor_stop(1,1);
+    arm_run();
     break;
-    
-    case FinalRetractArms:
-    left_temp = digitalRead(LEFT_ARM_RETRACTED) == HIGH;
-    right_temp = digitalRead(RIGHT_ARM_RETRACTED) == HIGH;
-    arm_motor_retract(!left_temp, !right_temp);
-    arm_motor_stop(left_temp, right_temp);
-    break;
-    
+
     case SystemStop:
-    track_motor_stop();
+    track_motor_stop(1,1);
     arm_motor_stop(1, 1);
     break;
     
@@ -186,87 +199,57 @@ void loop() {
   //next state logic
   switch (currentState) {
     case InitState:
-    if(digitalRead(FRONT_LIMIT_SWITCH) == HIGH){
+    
+    if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
       currentState = RunArms;
       DEBUG_PRINTSTATE("RunArms");
     }
     break;
     
     case RunArms:
-      currentState = MoveForward;
-      DEBUG_PRINTSTATE("MoveForward");
-    }
-    break;
-    
-    case RetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
-       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
-      currentState = MoveForward;
-      DEBUG_PRINTSTATE("MoveForward");
-    }
+    currentState = MoveForward;
+    DEBUG_PRINTSTATE("MoveForward");
     break;
     
     case MoveForward:
     track_motor_pos(left_pos, right_pos);
     if(!barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
-      currentState = BumpExtendArms;
+      currentState = BumpRunArms;
       DEBUG_PRINTSTATE("BumpExtendArms");
     }
-    else if(*right_pos - loopTics >= VehicleLength){
-      currentState = ExtendArms;
+    else if(*right_pos - loopTics >= 4*CUP_LENGTH){
+      currentState = RunArms;
       DEBUG_PRINTSTATE("ExtendArms");
     }
 
     else if(barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
-      currentState = FinalExtendArms;
+      currentState = FinalRunArms;
       DEBUG_PRINTSTATE("FinalExtendArms");
     }
     break;
     
-    case BumpExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
-       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
-      currentState = BumpRetractArms;
-      DEBUG_PRINTSTATE("BumpRetractArms");
-    }
-    break;
-    
-    case BumpRetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
-       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
+    case BumpRunArms:
       currentState = MoveOverBump;
-      DEBUG_PRINTSTATE("MoveOverBump");
-    }
+      DEBUG_PRINTSTATE("BumpRunArms");
     break;
     
     case MoveOverBump:
     track_motor_pos(left_pos, right_pos);
-    if(*right_pos - loopTics >= VehicleLength + BumpLength){
+    if(*right_pos - loopTics >= MiddleLength + BumpLength + 2*PadLength){
       currentState = RunArms;
       DEBUG_PRINTSTATE("RunArms");
     }
     break;
     
-    case FinalExtendArms:
-    if(digitalRead(RIGHT_ARM_EXTENDED) == HIGH &&
-       digitalRead(LEFT_ARM_EXTENDED) == HIGH){
-      currentState = FinalRetractArms;
-      DEBUG_PRINTSTATE("FinalRetractArms");
-    }
-    break;
-    
-    case FinalRetractArms:
-    if(digitalRead(RIGHT_ARM_RETRACTED) == HIGH &&
-       digitalRead(LEFT_ARM_RETRACTED) == HIGH){
+    case FinalRunArms:
       currentState = SystemStop;
-      DEBUG_PRINTSTATE("SystemStop");
-    }
     break;
     
     case SystemStop:
     break;
     
     default:
+    //error
     break;
   }
   delay(50);
