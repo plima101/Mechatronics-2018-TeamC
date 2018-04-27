@@ -6,6 +6,7 @@
 #define F_UP 75
 #define F_INIT 90
 #define B_DOWN 60
+#define B_PUSH 55
 #define B_UP 105 
 
 Servo front_servo;
@@ -31,4 +32,8 @@ void lower_scrapers(){
 
 void lift_scrapers(){
   back_servo.write(B_UP);
+}
+
+void push_scrapers(){
+  back_servo.write(B_PUSH);
 }
