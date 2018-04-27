@@ -110,24 +110,19 @@ void loop() {
     delay(100);
     track_motor_pos(&leftPoslocal, &rightPoslocal);
     
-    digitalWrite(LEFT_RELAY, LOW);
-    digitalWrite(RIGHT_RELAY, LOW);
+    push_scrapers();
     delay(1000);
-    digitalWrite(LEFT_RELAY, HIGH);
-    digitalWrite(RIGHT_RELAY, HIGH);
+    lift_scrapers();
     delay(100);
-    digitalWrite(LEFT_RELAY, LOW);
-    digitalWrite(RIGHT_RELAY, LOW);
+    push_scrapers();
     delay(1000);
-    digitalWrite(LEFT_RELAY, HIGH);
-    digitalWrite(RIGHT_RELAY, HIGH);
+    lower_scrapers();
     leftTargetLocal += CUP_LENGTH;
     rightTargetLocal += CUP_LENGTH;
     update_targets(leftTargetLocal, rightTargetLocal);
     reset_targets();
     cleaning_lower_front();
     track_motor_enable();
-    
   }
   else{
     track_motor_pos(&leftPoslocal, &rightPoslocal);
@@ -136,6 +131,41 @@ void loop() {
     track_motor_pid(.5, .5);
     delay(50);
   }
+  /*
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+  }
+  lower_scrapers();
+  delay(500);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+  }
+  push_scrapers();
+  delay(500);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(20);
+  }
+  lift_scrapers();
+  delay(500);
+  */
+  /*
+  arm_motor_stop(true,true);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(100);
+  }
+  arm_motor_extend(true,true);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(100);
+  }
+  arm_motor_stop(true,true);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(100);
+  }
+  arm_motor_retract(true,true);
+  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
+    delay(100);
+  }
+  */
 }
   
 
