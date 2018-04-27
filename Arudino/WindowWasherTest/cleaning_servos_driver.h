@@ -10,3 +10,5 @@ void lift_scrapers();
 
 void lower_scrapers();
 
+void push_scrapers();
+
