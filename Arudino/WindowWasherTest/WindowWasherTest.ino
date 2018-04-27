@@ -14,12 +14,6 @@
 //Functions to setup and drive motors using PID of chosen speed
 #include "track_motor_driver.h" 
 
-//Function to get distance to reference object (ground)
-#include "ping_distance.h" 
-
-//Functions to setup and read from accelermoter on chosen
-#include "accelerometer.h"
-
 //Functions to to drive front/back servos 
 #include "cleaning_servos_driver.h"
 
@@ -28,49 +22,52 @@
 /** END Header Files*/
 
 /** BEGIN Debug Section */
-//Uncomment Line below for Debug Serial Printing
+//Uncomment Line below for Debug Serial Prlonging
 #define DEBUG
 
 #ifdef DEBUG
  #define DEBUG_START Serial.begin(9600)
- #define DEBUG_PRINT(x)  Serial.print (x)
- #define DEBUG_PRINTLN(x)  Serial.println (x)
- #define DEBUG_PRINTSTATE(x) Serial.print("The current State is "); Serial.println (x)
+ #define DEBUG_PRlong(x)  Serial.prlong (x)
+ #define DEBUG_PRlongLN(x)  Serial.prlongln (x)
+ #define DEBUG_PRlongSTATE(x) Serial.prlong("The current State is "); Serial.prlongln (x)
 #else
  #define DEBUG_START
- #define DEBUG_PRINT(x)
- #define DEBUG_PRINTLN(x)
- #define DEBUG_PRINTSTATE(x)
+ #define DEBUG_PRlong(x)
+ #define DEBUG_PRlongLN(x)
+ #define DEBUG_PRlongSTATE(x)
 #endif
 /** END Debug Section */
 
-#define BumpLength 50
-#define VehicleLength 50
-#define WindowLength 200
+#define BumpLength 1728
+#define MiddleLength 18432
+#define PadLength 4032
 #define CUP_LENGTH 3456
+
+#define B_FREE 0
+#define B_FRONT 1
+#define B_MIDDLE 2
+#define B_BACK 3
+#define B_AFTER 4
 
 long leftTargetLocal, rightTargetLocal;
 long currentState;
 long loopTics;
 long barrierCrossed;
+long barrierHit;
 /*
  * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
-int cupMoved;
+long cupMoved;
 
 void setup() {
-  pinMode(RIGHT_ARM_EXTENDED, INPUT_PULLUP);
-  pinMode(RIGHT_ARM_RETRACTED, INPUT_PULLUP);
+  Serial.begin(9600);
+  barrierHit = B_FREE;
   pinMode(FRONT_BUMPER_LIMIT, INPUT_PULLUP);
-  digitalWrite(LEFT_RELAY, HIGH);
-  digitalWrite(RIGHT_RELAY, HIGH);
-  pinMode(LEFT_RELAY, OUTPUT);
-  pinMode(RIGHT_RELAY, OUTPUT);
   DEBUG_START;
   cleaning_servos_setup();
   track_motor_setup();
-  update_targets(100000,100000);
+  update_targets(10000,10000);
   reset_targets();
   track_motor_enable();
   track_motor_pid(0.0, .5);
@@ -105,76 +102,58 @@ void setup() {
 }
 
 long leftPoslocal, rightPoslocal;
-
+long barrierTics;
 void loop() {
+  track_motor_pos(&leftPoslocal, &rightPoslocal);
   
-  if(at_targets()){
-    cleaning_lift_front();
-    delay(100);
-    track_motor_pos(&leftPoslocal, &rightPoslocal);
-    
-    push_scrapers();
-    delay(1000);
-    lift_scrapers();
-    delay(100);
-    push_scrapers();
-    delay(1000);
-    lower_scrapers();
-    
-    cupMoved++;
-    if (cupMoved % 4 == 0) {
-      armClean();
+  if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
+    if(barrierHit == B_AFTER){
+        while(1){};
     }
-    
-    leftTargetLocal += CUP_LENGTH;
-    rightTargetLocal += CUP_LENGTH;
-    update_targets(leftTargetLocal, rightTargetLocal);
-    reset_targets();
-    cleaning_lower_front();
+    track_motor_stop(1,1);
+    barrierHit = B_FRONT;
+    cleaning_lift_front();
+    delay(300);
+    track_motor_pos(&leftPoslocal, &rightPoslocal);
+    barrierTics = leftPoslocal;
     track_motor_enable();
   }
+  
+  if(at_targets()){
+    
+    if(barrierHit == B_FREE || barrierHit == B_MIDDLE || barrierHit == B_AFTER)
+      sealCup();
+      
+    cupMoved++;
+    if (cupMoved % 4 == 0) {
+      if(barrierHit == B_FREE || barrierHit == B_AFTER) armClean();
+    }
+    advanceTarget();
+  }
   else{
-    track_motor_pos(&leftPoslocal, &rightPoslocal);
-    DEBUG_PRINTLN(leftPoslocal);
-    DEBUG_PRINTLN(rightPoslocal);
     track_motor_pid(.5, .5);
+    if(barrierHit == B_FRONT && leftPoslocal - barrierTics >= PadLength + BumpLength){
+      track_motor_stop(1,1);
+      cleaning_lower_front();
+      track_motor_enable();
+      barrierHit = B_MIDDLE;  
+    }
+    if(barrierHit == B_MIDDLE && leftPoslocal - barrierTics >= PadLength + BumpLength + MiddleLength){
+      track_motor_stop(1,1);
+      lift_scrapers();
+      track_motor_enable();
+      barrierHit = B_BACK;
+    }
+    if(barrierHit == B_BACK && leftPoslocal - barrierTics >= 2*PadLength + BumpLength + MiddleLength){
+      track_motor_stop(1,1);
+      lower_scrapers();
+      armClean();
+      track_motor_enable();
+      barrierHit = B_AFTER;
+      cupMoved = 1;
+    }
     delay(50);
   }
-  /*
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(20);
-  }
-  lower_scrapers();
-  delay(500);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(20);
-  }
-  push_scrapers();
-  delay(500);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(20);
-  }
-  lift_scrapers();
-  delay(500);
-  */
-  /*
-  arm_motor_stop(true,true);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(100);
-  }
-  arm_motor_extend(true,true);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(100);
-  }
-  arm_motor_stop(true,true);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(100);
-  }
-  arm_motor_retract(true,true);
-  while(digitalRead(FRONT_BUMPER_LIMIT) == LOW){
-    delay(100);
-  }
-  */
 }
 
 void armClean() {
@@ -189,4 +168,24 @@ void armClean() {
   arm_motor_stop(true,true);
 }
   
+void sealCup(){
+    cleaning_lift_front();
+    delay(100);
+    push_scrapers();
+    delay(1000);
+    lift_scrapers();
+    delay(100);
+    push_scrapers();
+    delay(1000);
+    lower_scrapers();
+    cleaning_lower_front();
+}
+
+void advanceTarget(){
+  leftTargetLocal += CUP_LENGTH;
+  rightTargetLocal += CUP_LENGTH;
+  update_targets(leftTargetLocal, rightTargetLocal);
+  reset_targets();
+  track_motor_enable();
+}
 

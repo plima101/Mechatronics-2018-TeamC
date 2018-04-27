@@ -6,20 +6,15 @@ double rightPWM, leftPWM;
 long prevRightPos, prevLeftPos;
 double last_time;
 double left_speed, right_speed;
-double left_ep = 0.0;
-double left_et = 0.0;
-double left_e = 0.0;
+
 double left_P = 50.0;
-double left_I = 0;
-double left_D = 0;
-
-double right_ep = 0.0;
-double right_et = 0.0;
+double left_e = 0.0;
 double right_e = 0.0;
-double right_P = 50.0;
-double right_I = 0.0;
-double right_D = 0.0;
 
+
+double right_P = 50.0;
+
+double timeChange;
 //Pin 5, RIGHT_TRACK_B is PORT E3
 //Pin 4, LEFT_TRACK_B is PORT G5
   
@@ -84,7 +79,11 @@ void track_motor_setup(){
 void track_motor_enable(){
   digitalWrite(RIGHT_TRACK_IN1, HIGH);
   digitalWrite(RIGHT_TRACK_IN2, LOW);
-
+  last_time = millis();
+  leftPWM = 0;
+  rightPWM = 0;
+  prevLeftPos = leftPos;
+  prevRightPos = rightPos;
   digitalWrite(LEFT_TRACK_IN1, LOW);
   digitalWrite(LEFT_TRACK_IN2, HIGH);
 }
@@ -104,7 +103,7 @@ void track_motor_stop(long left_stop, long right_stop){
 
 
 void track_motor_pid(double left_target, double right_target){
-  double timeChange = ((double)millis() - last_time);
+  timeChange = ((double)millis() - last_time);
   while(!timeChange) timeChange = ((double)millis() - last_time);
   left_speed = (double)(leftPos - prevLeftPos)/timeChange;
   right_speed = (double)(rightPos - prevRightPos)/timeChange;
@@ -112,28 +111,16 @@ void track_motor_pid(double left_target, double right_target){
   left_e = left_target - left_speed;
   right_e = right_target - right_speed;
 
-  double s = 1.0/(timeChange);
-
-  leftPWM = leftPWM + left_e*left_P + (left_e-left_ep)*(1.0/s)*left_D + s*left_I*left_et;
+  leftPWM = leftPWM + left_e*left_P;
   if(leftPWM > 255) leftPWM = 255;
   if(leftPWM < 0) leftPWM = 0;
 
-  rightPWM = rightPWM + right_e*right_P + (right_e-right_ep)*(1.0/s)*right_D + s*right_I*right_et;
+  rightPWM = rightPWM + right_e*right_P;
   if(rightPWM > 255) rightPWM = 255;
   if(rightPWM < 0) rightPWM = 0;
-  
-  Serial.println(leftPWM);
-  analogWrite(LEFT_TRACK_PWM, (int)leftPWM);
-  analogWrite(RIGHT_TRACK_PWM, (int)rightPWM);
-
-  //update error and time counts
-  left_ep = left_e;
-  left_et = left_et + left_e;
-
-  right_ep = right_e;
-  right_et = right_et + right_e;
-
-
+ 
+  analogWrite(LEFT_TRACK_PWM, (long)leftPWM);
+  analogWrite(RIGHT_TRACK_PWM, (long)rightPWM);
 
   last_time = millis();
   prevRightPos = rightPos;
