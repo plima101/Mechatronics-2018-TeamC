@@ -84,7 +84,9 @@ void track_motor_setup(){
 void track_motor_enable(){
   digitalWrite(RIGHT_TRACK_IN1, HIGH);
   digitalWrite(RIGHT_TRACK_IN2, LOW);
-
+  last_time = millis();
+  prevLeftPos = leftPos;
+  prevRightPos = rightPos;
   digitalWrite(LEFT_TRACK_IN1, LOW);
   digitalWrite(LEFT_TRACK_IN2, HIGH);
 }
@@ -104,24 +106,24 @@ void track_motor_stop(long left_stop, long right_stop){
 
 
 void track_motor_pid(double left_target, double right_target){
+  Serial.println(millis());
   double timeChange = ((double)millis() - last_time);
-  while(!timeChange) timeChange = ((double)millis() - last_time);
+  while(!timeChange) timeChange = 1;
   left_speed = (double)(leftPos - prevLeftPos)/timeChange;
   right_speed = (double)(rightPos - prevRightPos)/timeChange;
   
   left_e = left_target - left_speed;
   right_e = right_target - right_speed;
 
-  double s = 1.0/(timeChange);
-
-  leftPWM = leftPWM + left_e*left_P + (left_e-left_ep)*(1.0/s)*left_D + s*left_I*left_et;
+  leftPWM = leftPWM + left_e*left_P; //+ (left_e-left_ep)*(1.0/s)*left_D + s*left_I*left_et;
   if(leftPWM > 255) leftPWM = 255;
   if(leftPWM < 0) leftPWM = 0;
 
-  rightPWM = rightPWM + right_e*right_P + (right_e-right_ep)*(1.0/s)*right_D + s*right_I*right_et;
+  rightPWM = rightPWM + right_e*right_P;// + (right_e-right_ep)*(1.0/s)*right_D + s*right_I*right_et;
   if(rightPWM > 255) rightPWM = 255;
   if(rightPWM < 0) rightPWM = 0;
-  
+  Serial.println(left_speed);
+  Serial.println(right_speed);
   Serial.println(leftPWM);
   analogWrite(LEFT_TRACK_PWM, (int)leftPWM);
   analogWrite(RIGHT_TRACK_PWM, (int)rightPWM);
@@ -138,7 +140,7 @@ void track_motor_pid(double left_target, double right_target){
   last_time = millis();
   prevRightPos = rightPos;
   prevLeftPos = leftPos;
-
+  //Serial.println("leavepid");
 
 
 }

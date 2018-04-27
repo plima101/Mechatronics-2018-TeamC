@@ -1,7 +1,7 @@
 /*
  * Main application for Window Washer Robot
- * Authors: Mechantronics Team C: Millipede 
- * Date: 2/28/18
+ * Authors){ Mechantronics Team C){ Millipede 
+ * Date){ 2/28/18
  */
 
 /** BEGIN Header Files **/
@@ -60,7 +60,7 @@ long frontCrossing, middleCrossing, backCrossing;
 long leftTargetLocal, rightTargetLocal;
 
 /*
- * For Demo on 3/21: Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
+ * For Demo on 3/21){ Leds for motors, Micro Sevos, Limit Switches, Wire Encoder
  */
 
 void setup() {
@@ -104,10 +104,12 @@ void setup() {
 }
 
 void loop() {
+  DEBUG_PRINTLN(currentState);
   int left_temp, right_temp;
   long *left_pos, *right_pos;
   track_motor_pos(left_pos, right_pos);
   if(at_targets()){
+    DEBUG_PRINTLN("at targets");
     leftTargetLocal += CUP_LENGTH;
     rightTargetLocal += CUP_LENGTH;
     update_targets(leftTargetLocal, rightTargetLocal);
@@ -127,34 +129,34 @@ void loop() {
     track_motor_enable();
   }
     
-  switch (currentState) {
-    case InitState:
+  
+    if(currentState ==InitState){
     loopTics = *right_pos;
-    break;
+    }
     
 
-    case RunArms:
+    else if(currentState ==RunArms){
     barrierCrossing = 0;
     loopTics = *right_pos;
     track_motor_stop(1,1);
     arm_run();
-    break;
+    track_motor_enable();
+    }
     
     
-    case MoveForward:
+    else if(currentState ==MoveForward){
     barrierTics = *right_pos;
     arm_motor_stop(1, 1);
-    track_motor_enable();
     track_motor_pid(.5,.5);
-    break;
+    }
     
-    case BumpRunArms:
+    else if(currentState ==BumpRunArms){
     loopTics = *right_pos;
     track_motor_stop(1,1);
     arm_run();
-    break;
+    }
 
-    case MoveOverBump:
+    else if(currentState ==MoveOverBump){
     
     if(*right_pos - barrierTics <= PadLength + BumpLength){
         frontCrossing = 1;
@@ -174,44 +176,44 @@ void loop() {
         lower_scrapers();
     }
     arm_motor_stop(1,1);
-    track_motor_enable();
     track_motor_pid(.5,.5);
     barrierCrossed = 1;
     barrierCrossing = 1;
-    break;
+    }
     
-    case FinalRunArms:
+    else if(currentState ==FinalRunArms){
     track_motor_stop(1,1);
     arm_run();
-    break;
+    }
 
-    case SystemStop:
+    else if(currentState ==SystemStop){
     track_motor_stop(1,1);
     arm_motor_stop(1, 1);
-    break;
+    }
     
-    default:
+    else{
     //error
-    break;
-  }
+    }
+ 
   
 
   //next state logic
-  switch (currentState) {
-    case InitState:
+  if(currentState ==InitState){
     
     if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
-      currentState = RunArms;
+      delay(420);
+      currentState = MoveForward;
+      track_motor_enable();
       DEBUG_PRINTSTATE("RunArms");
     }
-    break;
+    }
     
-    case RunArms:
+    else if(currentState ==RunArms){
     currentState = MoveForward;
     DEBUG_PRINTSTATE("MoveForward");
-    break;
+    }
     
-    case MoveForward:
+    else if(currentState ==MoveForward){
     track_motor_pos(left_pos, right_pos);
     if(!barrierCrossed && digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
       currentState = BumpRunArms;
@@ -226,31 +228,31 @@ void loop() {
       currentState = FinalRunArms;
       DEBUG_PRINTSTATE("FinalExtendArms");
     }
-    break;
+    }
     
-    case BumpRunArms:
+    else if(currentState ==BumpRunArms){
       currentState = MoveOverBump;
       DEBUG_PRINTSTATE("BumpRunArms");
-    break;
+    }
     
-    case MoveOverBump:
+    else if(currentState ==MoveOverBump){
     track_motor_pos(left_pos, right_pos);
     if(*right_pos - loopTics >= MiddleLength + BumpLength + 2*PadLength){
       currentState = RunArms;
       DEBUG_PRINTSTATE("RunArms");
     }
-    break;
+    }
     
-    case FinalRunArms:
+    else if(currentState ==FinalRunArms){
       currentState = SystemStop;
-    break;
+    }
     
-    case SystemStop:
-    break;
+    else if(currentState ==SystemStop){
+    }
     
-    default:
+    else{
     //error
-    break;
-  }
+    }
+  
   delay(50);
 }
