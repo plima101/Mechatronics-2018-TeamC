@@ -1,7 +1,7 @@
 #include "track_motor_driver.h"
 #include "Arduino.h"
-long leftTarget, rightTarget, leftAtTarget, rightAtTarget;
-long rightPos, leftPos;
+volatile long leftTarget, rightTarget, leftAtTarget, rightAtTarget;
+volatile long rightPos, leftPos;
 double rightPWM, leftPWM;
 long prevRightPos, prevLeftPos;
 double last_time;
