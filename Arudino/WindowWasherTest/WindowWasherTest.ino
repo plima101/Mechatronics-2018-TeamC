@@ -27,14 +27,14 @@
 
 #ifdef DEBUG
  #define DEBUG_START Serial.begin(9600)
- #define DEBUG_PRlong(x)  Serial.prlong (x)
- #define DEBUG_PRlongLN(x)  Serial.prlongln (x)
- #define DEBUG_PRlongSTATE(x) Serial.prlong("The current State is "); Serial.prlongln (x)
+ #define DEBUG_PRINT(x)  Serial.print (x)
+ #define DEBUG_PRINTLN(x)  Serial.print (x)
+ #define DEBUG_PRINTSTATE(x) Serial.print("The current State is "); Serial.print (x)
 #else
  #define DEBUG_START
- #define DEBUG_PRlong(x)
- #define DEBUG_PRlongLN(x)
- #define DEBUG_PRlongSTATE(x)
+ #define DEBUG_PRINT(x)
+ #define DEBUG_PRINTLN(x)
+ #define DEBUG_PRINTSTATE(x)
 #endif
 /** END Debug Section */
 
@@ -110,9 +110,6 @@ void loop() {
   if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
     track_motor_stop(1,1);
     armClean();  
-    while(1){};
-    
-    track_motor_stop(1,1);
     barrierHit = B_FRONT;
     cleaning_lift_front();
     delay(300);

@@ -2,13 +2,13 @@
 #include "Arduino.h"
 #include <Servo.h>
 
-#define F_DOWN 23
-#define F_UP 75
-#define F_INIT 90
-#define F_MID 35
-#define B_DOWN 60
-#define B_PUSH 45
-#define B_UP 105 
+#define F_DOWN 60
+#define F_UP 25
+#define F_INIT 0
+#define F_MID 40
+#define B_DOWN 70
+#define B_PUSH 80
+#define B_UP 10
 
 Servo front_servo;
 Servo back_servo;
@@ -40,3 +40,10 @@ void lift_scrapers(){
 void push_scrapers(){
   back_servo.write(B_PUSH);
 }
+void test_front(long a){
+  front_servo.write(a);
+}
+void test_back(long a){
+  back_servo.write(a);
+}
+

@@ -2,13 +2,13 @@
 #include "Arduino.h"
 #include <Servo.h>
 
-#define F_DOWN 23
-#define F_UP 75
-#define F_INIT 90
-#define F_MID 35
-#define B_DOWN 60
-#define B_PUSH 45
-#define B_UP 105 
+#define F_DOWN 80
+#define F_UP 25
+#define F_INIT 25
+#define F_MID 40
+#define B_DOWN 55
+#define B_PUSH 80
+#define B_UP 30 
 
 Servo front_servo;
 Servo back_servo;

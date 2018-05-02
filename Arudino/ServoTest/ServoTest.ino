@@ -27,14 +27,14 @@
 
 #ifdef DEBUG
  #define DEBUG_START Serial.begin(9600)
- #define DEBUG_PRlong(x)  Serial.prlong (x)
- #define DEBUG_PRlongLN(x)  Serial.prlongln (x)
- #define DEBUG_PRlongSTATE(x) Serial.prlong("The current State is "); Serial.prlongln (x)
+ #define DEBUG_PRINT(x)  Serial.print (x)
+ #define DEBUG_PRINTLN(x)  Serial.println (x)
+ #define DEBUG_PRINTSTATE(x) Serial.print("The current State is "); Serial.prlongln (x)
 #else
  #define DEBUG_START
- #define DEBUG_PRlong(x)
- #define DEBUG_PRlongLN(x)
- #define DEBUG_PRlongSTATE(x)
+ #define DEBUG_PRINT(x)
+ #define DEBUG_PRINTLN(x)
+ #define DEBUG_PRINTSTATE(x)
 #endif
 /** END Debug Section */
 
@@ -93,76 +93,33 @@ void setup() {
   leftTargetLocal = CUP_LENGTH;
   rightTargetLocal = CUP_LENGTH;
   update_targets(leftTargetLocal, rightTargetLocal);
-  //lower_scrapers();
-  cleaning_lower_front();
+  //cleaning_lower_front();
   arm_motor_setup();
   track_motor_enable();
-  armClean();
+  //armClean();
 
   cupMoved = 0;
 }
 
 long leftPoslocal, rightPoslocal;
 long barrierTics;
+long cmd;
+long cmdPos; 
 void loop() {
-  track_motor_pos(&leftPoslocal, &rightPoslocal);
-  
-  if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
-    track_motor_stop(1,1);
-    armClean();  
-    while(1){};
-    
-    track_motor_stop(1,1);
-    barrierHit = B_FRONT;
-    cleaning_lift_front();
-    delay(300);
-    track_motor_pos(&leftPoslocal, &rightPoslocal);
-    barrierTics = leftPoslocal;
-    track_motor_enable();
+  if(Serial.available() > 0){
+    cmd = Serial.read();
+    cmdPos = Serial.parseInt(); 
+    if(cmd == 'F'){
+      Serial.println(cmdPos);
+      test_front(cmdPos);
+    }
+    if(cmd == 'B'){
+      Serial.println(cmdPos);
+      test_back(cmdPos); 
+    }
   }
-  
-  if(at_targets()){
-    
-    if(barrierHit == B_FREE || barrierHit == B_PAD || barrierHit == B_MIDDLE || barrierHit == B_AFTER)
-      sealCup();
-      
-    cupMoved++;
-    if (cupMoved % 2 == 0) {
-      if(barrierHit == B_FREE || barrierHit == B_AFTER) armClean();
-    }
-    advanceTarget();
-  }
-  else{
-    track_motor_pid(.5, .5);
-    if(barrierHit == B_FRONT && leftPoslocal - barrierTics >= PadLength/2){
-      track_motor_stop(1,1);
-      cleaning_mid_front();
-      track_motor_enable();
-      barrierHit = B_PAD;  
-    }
-    if(barrierHit == B_PAD && leftPoslocal - barrierTics >= PadLength + BumpLength){
-      track_motor_stop(1,1);
-      cleaning_lower_front();
-      track_motor_enable();
-      barrierHit = B_MIDDLE;  
-    }
-     
-    if(barrierHit == B_MIDDLE && leftPoslocal - barrierTics >= PadLength + BumpLength + MiddleLength){
-      track_motor_stop(1,1);
-      lift_scrapers();
-      track_motor_enable();
-      barrierHit = B_BACK;
-    }
-    if(barrierHit == B_BACK && leftPoslocal - barrierTics >= 2*PadLength + BumpLength + MiddleLength){
-      track_motor_stop(1,1);
-      lower_scrapers();
-      armClean();
-      track_motor_enable();
-      barrierHit = B_AFTER;
-      cupMoved = 1;
-    }
-    delay(50);
-  }
+
+  delay(50);  
 }
 
 void armClean() {

@@ -14,3 +14,7 @@ void lower_scrapers();
 
 void push_scrapers();
 
+void test_front(long a); 
+
+void test_back(long a);
+
