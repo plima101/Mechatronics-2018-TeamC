@@ -131,15 +131,14 @@ void loop() {
   }
   else{
     track_motor_pid(.5, .5);
-    if(barrierHit == B_FRONT && leftPoslocal - barrierTics >= PadLength/2){
+    if(barrierHit == B_FRONT && leftPoslocal - barrierTics >= PadLength/3){
       track_motor_stop(1,1);
-      cleaning_mid_front();
+      cleaning_lower_front();
       track_motor_enable();
       barrierHit = B_PAD;  
     }
     if(barrierHit == B_PAD && leftPoslocal - barrierTics >= PadLength + BumpLength){
       track_motor_stop(1,1);
-      cleaning_lower_front();
       track_motor_enable();
       barrierHit = B_MIDDLE;  
     }
@@ -166,11 +165,11 @@ void armClean() {
   arm_motor_stop(true,true);
   delay(500);
   arm_motor_extend(true,true);
-  delay(14000);
+  delay(9000);
   arm_motor_stop(true,true);
   delay(500);
   arm_motor_retract(true,true);
-  delay(14000);  
+  delay(9000);  
   arm_motor_stop(true,true);
 }
   

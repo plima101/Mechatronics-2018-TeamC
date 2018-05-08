@@ -6,8 +6,8 @@
 #define F_UP 25
 #define F_INIT 25
 #define F_MID 40
-#define B_DOWN 55
-#define B_PUSH 80
+#define B_DOWN 65
+#define B_PUSH 90
 #define B_UP 30 
 
 Servo front_servo;
