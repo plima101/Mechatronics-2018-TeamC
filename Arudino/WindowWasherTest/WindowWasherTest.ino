@@ -62,9 +62,10 @@ long barrierHit;
 long cupMoved;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   barrierHit = B_FREE;
   pinMode(FRONT_BUMPER_LIMIT, INPUT_PULLUP);
+  pinMode(16, INPUT);
   DEBUG_START;
   cleaning_servos_setup();
   track_motor_setup();
@@ -98,7 +99,7 @@ void setup() {
   arm_motor_setup();
   track_motor_enable();
   armClean();
-
+  actually_scrape();
   cupMoved = 0;
 }
 
@@ -110,6 +111,10 @@ void loop() {
   if(digitalRead(FRONT_BUMPER_LIMIT) == HIGH){
     track_motor_stop(1,1);
     armClean();  
+    
+    if(digitalRead(16) == HIGH)
+      while(1);
+      
     barrierHit = B_FRONT;
     cleaning_lift_front();
     delay(300);
@@ -127,6 +132,7 @@ void loop() {
     if (cupMoved % 2 == 0) {
       if(barrierHit == B_FREE || barrierHit == B_AFTER) armClean();
     }
+    actually_scrape();
     advanceTarget();
   }
   else{
